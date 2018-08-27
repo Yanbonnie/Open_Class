@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Bonnie自定义播放器</title>
+    <link rel="stylesheet" href="./css/index.css">
+</head>
+<body>
+    <div class="myVideo">
+        <video id="video">
+                <source src="http://video.699pic.com/videos/94/67/25/Pw5HE6Xv0mpg1523946725_10s.mp4">
+        </video>
+        <div class="controler">
+            <div class="item">
+                <span class="play" id="play"></span>
+                <span id="currentTime">00:00:00</span>
+                <span id="duration">00:00:00</span>
+            </div>
+            <div class="item">
+                <span class="audio" id="audio"></span>
+                <span class="screen" id="screen"></span>
+            </div>
+            <div class="progress" id="progress">
+                <span class="slide" id="slide"></span>
+            </div>
+        </div>
+    </div>
+    <script>
+        var util = {
+            toZore(n){
+                return n >= 10 ? n : '0'+n
+            },
+            toData(currentTime){
+                let h = this.toZore(Math.floor(currentTime / 3600)),
+                    m = this.toZore(Math.floor(currentTime%3600/60)),
+                    s = this.toZore(Math.floor(currentTime)%60)
+                return h+":"+m+":"+s
+            }
+        }
+        window.onload = function(){
+            var myVideo = document.getElementsByClassName('myVideo')[0],
+            video = document.getElementById('video'),
+            play = document.getElementById('play'),
+            currentTime = document.getElementById('currentTime'),
+            duration = document.getElementById('duration'),
+            audio = document.getElementById('audio'),
+            screen = document.getElementById('screen'),
+            progress = document.getElementById('progress'),
+            slide = document.getElementById('slide'),
+            timer = null,
+            fullScreen = false,
+            disX = 0,
+            disY = 0;
+            
+            // 控制播放按钮
+            play.onclick=function(){
+                playHandle();
+            }
+
+            function playHandle(){
+                if(video.paused){
+                    video.play();
+                    console.log(video.duration)
+                    
+                    timer = setInterval(changeTime,1000)
+                    play.classList.add('paused');
+                    
+                }else{
+                    video.pause();
+                    play.classList.remove('paused');
+                    clearInterval(timer)
+                }
+            }
+            // 控制声音
+            audio.onclick=function(){
+                if(video.muted){
+                    video.volume  = 1;
+                    video.muted = false;
+                    this.classList.remove('muted')
+                }else{
+                    video.volume  = 0;
+                    video.muted = true;
+                    this.classList.add('muted')
+                }
+            }
+            
+            // 控制全屏
+            screen.onclick=function(){
+                if(fullScreen){
+                    myVideo.style.width='600px';
+                    myVideo.style.height="auto";
+                    fullScreen = false;
+                }else{
+                    console.log(111)
+                    myVideo.style.width="100%";
+                    myVideo.style.height="100%";
+                    fullScreen = true;
+                }
+            }
+            // 控制播放的当前时间
+            function changeTime(){
+                currentTime.innerText = util.toData(video.currentTime);
+                var scale = video.currentTime / video.duration;
+                slide.style.left = (progress.offsetWidth - slide.offsetWidth)* scale + 'px';
+                if(video.ended){
+                    video.currentTime = 0;
+                }
+            }
+
+            // 控制播放进度条
+            slide.onmousedown = function(ev){
+                var ev = ev || window.ev;
+                disX = ev.clientX - slide.offsetLeft;
+                document.onmousemove = function(ev){
+                    var ev = ev || window.ev;
+                    var L = ev.clientX - disX;
+                    if(L < 0){
+                        L = 0
+                    }else if ( L > progress.offsetWidth - slide.offsetWidth){
+                        L = progress.offsetWidth - slide.offsetWidth;
+                    }
+                    slide.style.left = L + 'px';
+                    var scale = L / (progress.offsetWidth - slide.offsetWidth)
+                    video.currentTime = scale * video.duration;
+                    changeTime();
+
+                }
+                document.onmouseup = function(){
+                    document.onmousemove = null;
+                    document.onmouseup = null;
+                }
+                return false;
+            }
+
+
+            video.addEventListener('canplaythrough',function(){
+                duration.innerText = util.toData(video.duration);
+                playHandle();
+            });
+            
+        }
+    </script>
+</body>
+</html>
